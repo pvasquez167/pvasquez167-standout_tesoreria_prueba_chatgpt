@@ -1,0 +1,1641 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Standout · Control de Caja Larga Estadía</title>
+  <style>
+    :root {
+      --bg: #f5f7fb;
+      --card: #ffffff;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --line: #e5e7eb;
+      --primary: #0f172a;
+      --accent: #2563eb;
+      --good: #15803d;
+      --warn: #b45309;
+      --bad: #b91c1c;
+      --soft-blue: #eff6ff;
+      --soft-green: #ecfdf5;
+      --soft-red: #fef2f2;
+      --soft-yellow: #fffbeb;
+      --radius: 18px;
+      --shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    header {
+      background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%);
+      color: white;
+      padding: 24px 20px 18px;
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      box-shadow: var(--shadow);
+    }
+
+    .header-grid {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 16px;
+      align-items: center;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      margin: 0 0 6px;
+      font-size: 1.6rem;
+      line-height: 1.2;
+    }
+
+    .subtitle {
+      color: rgba(255,255,255,0.82);
+      font-size: 0.95rem;
+      margin: 0;
+    }
+
+    .toolbar {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: flex-end;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 18px auto 32px;
+      padding: 0 20px;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 8px;
+      margin-bottom: 18px;
+    }
+
+    .tab {
+      border: 1px solid rgba(255,255,255,0.18);
+      background: rgba(255,255,255,0.12);
+      color: white;
+      padding: 10px 14px;
+      border-radius: 999px;
+      cursor: pointer;
+      white-space: nowrap;
+      font-size: 0.92rem;
+    }
+
+    .tab.active {
+      background: white;
+      color: var(--primary);
+      font-weight: 700;
+    }
+
+    .page {
+      display: none;
+    }
+
+    .page.active {
+      display: block;
+    }
+
+    .grid {
+      display: grid;
+      gap: 16px;
+    }
+
+    .grid.cards {
+      grid-template-columns: repeat(4, minmax(220px, 1fr));
+    }
+
+    .grid.two {
+      grid-template-columns: 1.2fr 1fr;
+    }
+
+    .grid.three {
+      grid-template-columns: repeat(3, minmax(220px, 1fr));
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 18px;
+      box-shadow: var(--shadow);
+    }
+
+    .card h2, .card h3 {
+      margin: 0 0 10px;
+      font-size: 1.02rem;
+    }
+
+    .hint {
+      color: var(--muted);
+      font-size: 0.9rem;
+      line-height: 1.45;
+    }
+
+    .kpi {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      min-height: 132px;
+    }
+
+    .kpi .label {
+      font-size: 0.9rem;
+      color: var(--muted);
+    }
+
+    .kpi .value {
+      font-size: 1.8rem;
+      font-weight: 800;
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+    }
+
+    .kpi .sub {
+      font-size: 0.88rem;
+      color: var(--muted);
+    }
+
+    .good { color: var(--good); }
+    .warn { color: var(--warn); }
+    .bad { color: var(--bad); }
+    .soft-good { background: var(--soft-green); }
+    .soft-warn { background: var(--soft-yellow); }
+    .soft-bad { background: var(--soft-red); }
+    .soft-blue { background: var(--soft-blue); }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(180px, 1fr));
+      gap: 12px;
+      margin-top: 12px;
+    }
+
+    .form-grid.small {
+      grid-template-columns: repeat(3, minmax(180px, 1fr));
+    }
+
+    label {
+      display: block;
+      font-size: 0.84rem;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    input, select, textarea, button {
+      width: 100%;
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      padding: 10px 12px;
+      font-size: 0.95rem;
+      font-family: inherit;
+    }
+
+    textarea { min-height: 94px; resize: vertical; }
+
+    button {
+      cursor: pointer;
+      border: none;
+      background: var(--primary);
+      color: white;
+      font-weight: 700;
+      width: auto;
+      padding: 10px 14px;
+    }
+
+    button.secondary {
+      background: white;
+      color: var(--primary);
+      border: 1px solid var(--line);
+    }
+
+    button.accent { background: var(--accent); }
+    button.good { background: var(--good); }
+    button.bad { background: var(--bad); }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 14px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 12px;
+      font-size: 0.93rem;
+    }
+
+    th, td {
+      border-bottom: 1px solid var(--line);
+      padding: 10px 8px;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      color: var(--muted);
+      font-size: 0.82rem;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+
+    tr:hover td {
+      background: rgba(37, 99, 235, 0.035);
+    }
+
+    .pill {
+      display: inline-block;
+      padding: 5px 8px;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      background: #eef2ff;
+      color: #3730a3;
+    }
+
+    .pill.good { background: #dcfce7; color: #166534; }
+    .pill.warn { background: #fef3c7; color: #92400e; }
+    .pill.bad { background: #fee2e2; color: #991b1b; }
+
+    .notice {
+      border-left: 4px solid var(--accent);
+      background: var(--soft-blue);
+      padding: 14px 16px;
+      border-radius: 14px;
+      margin: 12px 0 0;
+      font-size: 0.93rem;
+      line-height: 1.5;
+    }
+
+    .list {
+      margin: 10px 0 0;
+      padding-left: 18px;
+      color: var(--muted);
+    }
+
+    .list li { margin-bottom: 6px; }
+
+    .status-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+      margin-top: 8px;
+    }
+
+    .muted { color: var(--muted); }
+    .right { text-align: right; }
+    .center { text-align: center; }
+
+    .split {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .sticky-box {
+      position: sticky;
+      top: 124px;
+    }
+
+    .upload-box {
+      border: 2px dashed #cbd5e1;
+      padding: 14px;
+      border-radius: 16px;
+      background: #fafcff;
+    }
+
+    .footer-note {
+      color: var(--muted);
+      font-size: 0.83rem;
+      margin-top: 12px;
+    }
+
+    @media (max-width: 1180px) {
+      .grid.cards, .grid.two, .grid.three, .form-grid, .form-grid.small { grid-template-columns: 1fr 1fr; }
+    }
+
+    @media (max-width: 760px) {
+      .grid.cards, .grid.two, .grid.three, .form-grid, .form-grid.small { grid-template-columns: 1fr; }
+      .header-grid { grid-template-columns: 1fr; }
+      .toolbar { justify-content: flex-start; }
+      .sticky-box { position: static; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="header-grid">
+      <div>
+        <h1>Standout · Control de Caja · Larga Estadía</h1>
+        <p class="subtitle">MVP estático para GitHub Pages: carga movimientos, liquidaciones y provisiones; separa capas de caja y te muestra si el descuadre bancario es cero.</p>
+      </div>
+      <div class="toolbar">
+        <select id="monthFilter"></select>
+        <button class="secondary" id="exportJsonBtn">Exportar base JSON</button>
+        <button class="secondary" id="importJsonBtn">Importar base JSON</button>
+        <input type="file" id="importJsonInput" accept="application/json" style="display:none" />
+      </div>
+    </div>
+    <div class="tabs" id="tabs"></div>
+  </header>
+
+  <div class="container">
+    <section class="page active" data-page="dashboard">
+      <div class="grid cards" id="dashboardCards"></div>
+
+      <div class="grid two" style="margin-top:16px;">
+        <div class="card">
+          <div class="split">
+            <h2>Resumen por capas</h2>
+            <span class="pill" id="statusPill">Sin evaluar</span>
+          </div>
+          <table>
+            <tbody id="layersTable"></tbody>
+          </table>
+          <div class="notice" id="dashboardInsight"></div>
+        </div>
+
+        <div class="card">
+          <h2>Semáforos del cierre</h2>
+          <table>
+            <tbody id="alertsTable"></tbody>
+          </table>
+          <p class="footer-note">Regla base: la prioridad es que el <strong>descuadre bancario</strong> sea 0 y que sepas cuánto del banco realmente es de Standout.</p>
+        </div>
+      </div>
+
+      <div class="grid two" style="margin-top:16px;">
+        <div class="card">
+          <h2>Resumen por cuenta bancaria</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>Cuenta</th>
+                <th>Saldo inicial</th>
+                <th>Movimientos netos</th>
+                <th>Saldo esperado</th>
+                <th>Saldo real</th>
+                <th>Diferencia</th>
+              </tr>
+            </thead>
+            <tbody id="accountsDashboardTable"></tbody>
+          </table>
+        </div>
+
+        <div class="card">
+          <h2>Top rubros del mes</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>Rubro</th>
+                <th>Total</th>
+              </tr>
+            </thead>
+            <tbody id="topRubrosTable"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section class="page" data-page="cuentas">
+      <div class="grid two">
+        <div class="card">
+          <h2>Cuentas bancarias</h2>
+          <p class="hint">Cada mes defines el saldo inicial y el saldo real de corte por cuenta. Con eso el sistema calcula el saldo esperado según movimientos y detecta el descuadre.</p>
+          <div class="form-grid small">
+            <div>
+              <label>Mes</label>
+              <input type="month" id="accMonth" />
+            </div>
+            <div>
+              <label>Nombre de la cuenta</label>
+              <input type="text" id="accName" placeholder="Ej. Bancolombia Fiducuenta 1" />
+            </div>
+            <div>
+              <label>Saldo inicial del mes</label>
+              <input type="number" id="accOpening" step="0.01" />
+            </div>
+            <div>
+              <label>Saldo real al corte</label>
+              <input type="number" id="accActual" step="0.01" />
+            </div>
+          </div>
+          <div class="actions">
+            <button id="saveAccountBtn">Guardar cuenta</button>
+          </div>
+
+          <table>
+            <thead>
+              <tr>
+                <th>Mes</th>
+                <th>Cuenta</th>
+                <th>Saldo inicial</th>
+                <th>Saldo real</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="accountsTable"></tbody>
+          </table>
+        </div>
+
+        <div class="card sticky-box">
+          <h2>Cómo usar esta pantalla</h2>
+          <ul class="list">
+            <li><strong>Saldo inicial</strong>: el saldo bancario con el que arrancó el mes.</li>
+            <li><strong>Saldo real</strong>: el saldo que muestra Bancolombia el día del corte.</li>
+            <li>Si el saldo real no coincide con el esperado según movimientos, el dashboard lo marca en rojo.</li>
+          </ul>
+          <div class="notice">Para un cierre diario, puedes usar el mismo mes y actualizar el saldo real todas las tardes. Así ves si el descuadre contra movimientos es cero.</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="page" data-page="movimientos">
+      <div class="grid two">
+        <div class="card">
+          <h2>Registrar movimiento bancario</h2>
+          <p class="hint">Este es el corazón operativo diario. Cada fila debe representar una entrada, salida o traslado real del banco.</p>
+          <div class="form-grid">
+            <div>
+              <label>Fecha</label>
+              <input type="date" id="movDate" />
+            </div>
+            <div>
+              <label>Cuenta</label>
+              <select id="movAccount"></select>
+            </div>
+            <div>
+              <label>Tipo</label>
+              <select id="movType"></select>
+            </div>
+            <div>
+              <label>Rubro</label>
+              <select id="movCategory"></select>
+            </div>
+            <div>
+              <label>Subrubro</label>
+              <input type="text" id="movSubcategory" placeholder="Ej. comisión transferencia" />
+            </div>
+            <div>
+              <label>Apartamento</label>
+              <input type="text" id="movApartment" placeholder="Opcional" />
+            </div>
+            <div>
+              <label>Descripción</label>
+              <input type="text" id="movDescription" placeholder="Texto del banco" />
+            </div>
+            <div>
+              <label>Valor</label>
+              <input type="number" id="movAmount" step="0.01" />
+            </div>
+          </div>
+          <div class="actions">
+            <button id="saveMovementBtn">Guardar movimiento</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Cargar CSV de movimientos</h2>
+          <div class="upload-box">
+            <p class="hint">Columnas esperadas: <strong>fecha, cuenta, tipo, rubro, subrubro, apartamento, descripcion, valor</strong>.</p>
+            <input type="file" id="movCsvInput" accept=".csv" />
+            <div class="actions">
+              <button class="secondary" id="downloadMovTemplateBtn">Descargar plantilla CSV</button>
+            </div>
+          </div>
+          <div class="notice">Los <strong>traslados entre cuentas propias</strong> deben cargarse con tipo <em>traslado</em> y rubro <em>TRASLADO_INTERNO</em>; así no contaminan la lectura operativa.</div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:16px;">
+        <div class="split">
+          <h2>Movimientos cargados</h2>
+          <span class="muted" id="movementsCount"></span>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Cuenta</th>
+              <th>Tipo</th>
+              <th>Rubro</th>
+              <th>Subrubro</th>
+              <th>Apartamento</th>
+              <th>Descripción</th>
+              <th class="right">Valor</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="movementsTable"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="page" data-page="liquidaciones">
+      <div class="grid two">
+        <div class="card">
+          <h2>Liquidación resumida por apartamento</h2>
+          <p class="hint">Esta tabla resume la economía mensual por apartamento. No reemplaza tu detalle operativo; alimenta las capas de caja y los reportes gerenciales.</p>
+          <div class="form-grid">
+            <div>
+              <label>Mes</label>
+              <input type="month" id="liqMonth" />
+            </div>
+            <div>
+              <label>Apartamento</label>
+              <input type="text" id="liqApartment" />
+            </div>
+            <div>
+              <label>Canon cobrado</label>
+              <input type="number" id="liqCanon" step="0.01" />
+            </div>
+            <div>
+              <label>Depósito recibido</label>
+              <input type="number" id="liqDepositIn" step="0.01" />
+            </div>
+            <div>
+              <label>Depósito devuelto</label>
+              <input type="number" id="liqDepositOut" step="0.01" />
+            </div>
+            <div>
+              <label>Extras y daños cobrados</label>
+              <input type="number" id="liqExtras" step="0.01" />
+            </div>
+            <div>
+              <label>Gastos del propietario</label>
+              <input type="number" id="liqOwnerExpenses" step="0.01" />
+            </div>
+            <div>
+              <label>Gastos Standout</label>
+              <input type="number" id="liqStandoutExpenses" step="0.01" />
+            </div>
+            <div>
+              <label>Comisión bruta</label>
+              <input type="number" id="liqCommissionGross" step="0.01" />
+            </div>
+            <div>
+              <label>IVA de comisión</label>
+              <input type="number" id="liqIva" step="0.01" />
+            </div>
+            <div>
+              <label>Giro al propietario</label>
+              <input type="number" id="liqOwnerPayout" step="0.01" />
+            </div>
+            <div>
+              <label>Retención arrendatario/empresa</label>
+              <input type="number" id="liqRetentionTenant" step="0.01" />
+            </div>
+            <div>
+              <label>Retención propietario empresa</label>
+              <input type="number" id="liqRetentionOwner" step="0.01" />
+            </div>
+            <div style="grid-column: 1 / -1;">
+              <label>Notas</label>
+              <textarea id="liqNotes" placeholder="Opcional"></textarea>
+            </div>
+          </div>
+          <div class="actions">
+            <button id="saveLiquidationBtn">Guardar liquidación</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Cargar CSV de liquidaciones</h2>
+          <div class="upload-box">
+            <p class="hint">Columnas esperadas: <strong>mes, apartamento, canon, deposito_recibido, deposito_devuelto, extras_danos, gastos_propietario, gastos_standout, comision_bruta, iva_comision, giro_propietario, retencion_arrendatario, retencion_propietario, notas</strong>.</p>
+            <input type="file" id="liqCsvInput" accept=".csv" />
+            <div class="actions">
+              <button class="secondary" id="downloadLiqTemplateBtn">Descargar plantilla CSV</button>
+            </div>
+          </div>
+          <div class="notice">Aquí está el radar de <strong>depósitos</strong>, <strong>IVA a provisionar</strong>, <strong>retenciones</strong> y <strong>giros a propietarios</strong>. Sin esta capa, el banco miente porque mezcla plata ajena con plata propia.</div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:16px;">
+        <div class="split">
+          <h2>Liquidaciones cargadas</h2>
+          <span class="muted" id="liquidationsCount"></span>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Mes</th>
+              <th>Apto</th>
+              <th>Canon</th>
+              <th>Depósito neto</th>
+              <th>Extras/daños</th>
+              <th>Gastos propietario</th>
+              <th>Gastos Standout</th>
+              <th>Comisión bruta</th>
+              <th>IVA</th>
+              <th>Giro propietario</th>
+              <th>Retenciones</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="liquidationsTable"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="page" data-page="provisiones">
+      <div class="grid two">
+        <div class="card">
+          <h2>Provisiones y obligaciones internas</h2>
+          <p class="hint">Usa esta pantalla para partidas que sí afectan la caja real disponible pero que no necesariamente salen del banco el mismo día: ICA, compras por volumen, nómina pendiente, reservas técnicas.</p>
+          <div class="form-grid small">
+            <div>
+              <label>Mes</label>
+              <input type="month" id="provMonth" />
+            </div>
+            <div>
+              <label>Rubro</label>
+              <select id="provCategory"></select>
+            </div>
+            <div>
+              <label>Valor</label>
+              <input type="number" id="provAmount" step="0.01" />
+            </div>
+            <div style="grid-column: 1 / -1;">
+              <label>Descripción</label>
+              <input type="text" id="provDescription" placeholder="Ej. provisión ICA bimestre 2" />
+            </div>
+          </div>
+          <div class="actions">
+            <button id="saveProvisionBtn">Guardar provisión</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Enfoque recomendado</h2>
+          <ul class="list">
+            <li><strong>IVA y retenciones</strong> salen de liquidaciones y pagos reales.</li>
+            <li><strong>ICA</strong> y compras por volumen pueden provisionarse aquí para no engañarte con una caja “aparente”.</li>
+            <li>Si después lo conviertes en app completa con base de datos, esta tabla será una entidad aparte y muy útil para alertas.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:16px;">
+        <div class="split">
+          <h2>Provisiones cargadas</h2>
+          <span class="muted" id="provisionsCount"></span>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Mes</th>
+              <th>Rubro</th>
+              <th>Descripción</th>
+              <th>Valor</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="provisionsTable"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="page" data-page="reportes">
+      <div class="grid two">
+        <div class="card">
+          <h2>Consultas gerenciales</h2>
+          <div class="form-grid small">
+            <div>
+              <label>Mes</label>
+              <input type="month" id="reportMonth" />
+            </div>
+            <div>
+              <label>Apartamento</label>
+              <input type="text" id="reportApartment" placeholder="Vacío = todos" />
+            </div>
+            <div>
+              <label>Cuenta</label>
+              <input type="text" id="reportAccount" placeholder="Vacío = todas" />
+            </div>
+          </div>
+          <div class="actions">
+            <button id="runReportsBtn">Actualizar reportes</button>
+          </div>
+          <div class="notice">La lógica del MVP es esta: primero controlas caja y capas; luego bajas al detalle por apartamento, cuenta o rubro.</div>
+        </div>
+
+        <div class="card">
+          <h2>Lectura del descuadre</h2>
+          <table>
+            <tbody id="reportInsights"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="grid two" style="margin-top:16px;">
+        <div class="card">
+          <h2>Por rubro</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>Rubro</th>
+                <th>Total</th>
+              </tr>
+            </thead>
+            <tbody id="reportByCategory"></tbody>
+          </table>
+        </div>
+
+        <div class="card">
+          <h2>Por apartamento</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>Apartamento</th>
+                <th>Canon</th>
+                <th>Comisión bruta</th>
+                <th>IVA</th>
+                <th>Giro propietario</th>
+                <th>Margen neto</th>
+              </tr>
+            </thead>
+            <tbody id="reportByApartment"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:16px;">
+        <h2>Movimientos filtrados</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Cuenta</th>
+              <th>Rubro</th>
+              <th>Apartamento</th>
+              <th>Descripción</th>
+              <th class="right">Valor firmado</th>
+            </tr>
+          </thead>
+          <tbody id="reportMovements"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="page" data-page="configuracion">
+      <div class="grid two">
+        <div class="card">
+          <h2>Ruta recomendada</h2>
+          <ol class="list">
+            <li>Cargar saldos por cuenta del mes.</li>
+            <li>Pegar o importar movimientos diarios.</li>
+            <li>Subir liquidaciones resumidas por apartamento.</li>
+            <li>Registrar provisiones que no quieres perder de radar.</li>
+            <li>Mirar el dashboard. Si el descuadre no es 0, ir a reportes y buscar por rubro/cuenta.</li>
+          </ol>
+          <div class="notice">Este MVP sirve para validar la lógica y operar ya. Un agente autónomo real necesitaría un backend con usuarios, base de datos, reglas, y eventualmente integración bancaria.</div>
+        </div>
+
+        <div class="card">
+          <h2>Mantenimiento de la base local</h2>
+          <div class="actions">
+            <button class="secondary" id="seedDemoBtn">Cargar datos demo</button>
+            <button class="bad" id="clearAllBtn">Borrar toda la base local</button>
+          </div>
+          <p class="footer-note">Los datos se guardan en <strong>localStorage</strong> del navegador. Para trabajo real, exporta el JSON con frecuencia o migra esto a una base de datos.</p>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const STORAGE_KEY = 'standout_tesoreria_mvp_v1';
+    const PAGES = [
+      { id: 'dashboard', label: 'Dashboard' },
+      { id: 'cuentas', label: 'Cuentas' },
+      { id: 'movimientos', label: 'Movimientos' },
+      { id: 'liquidaciones', label: 'Liquidaciones' },
+      { id: 'provisiones', label: 'Provisiones' },
+      { id: 'reportes', label: 'Reportes' },
+      { id: 'configuracion', label: 'Configuración' },
+    ];
+
+    const MOVEMENT_TYPES = ['entrada', 'salida', 'traslado'];
+    const MOVEMENT_CATEGORIES = [
+      'CANON_RECIBIDO',
+      'DEPOSITO_RECIBIDO',
+      'EXTRAS_SERVICIOS',
+      'DANOS_COBRADOS',
+      'GIRO_PROPIETARIO',
+      'GASTO_APARTAMENTO_PROPIETARIO',
+      'GASTO_STANDOUT',
+      'PAGO_IVA_DIAN',
+      'TRASLADO_RETENCION',
+      'GASTO_BANCARIO',
+      'GASTO_MENOR',
+      'COMPRA_VOLUMEN',
+      'TRASLADO_INTERNO',
+      'OTRO'
+    ];
+
+    const PROVISION_CATEGORIES = [
+      'ICA',
+      'NOMINA',
+      'COMPRA_VOLUMEN_PENDIENTE',
+      'RESERVA_MANTENIMIENTO',
+      'OTRA_PROVISION'
+    ];
+
+    const DEFAULT_STATE = {
+      accounts: [],
+      movements: [],
+      liquidations: [],
+      provisions: []
+    };
+
+    let state = loadState();
+    let activePage = 'dashboard';
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return structuredClone(DEFAULT_STATE);
+        const parsed = JSON.parse(raw);
+        return {
+          accounts: parsed.accounts || [],
+          movements: parsed.movements || [],
+          liquidations: parsed.liquidations || [],
+          provisions: parsed.provisions || [],
+        };
+      } catch {
+        return structuredClone(DEFAULT_STATE);
+      }
+    }
+
+    function saveState() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }
+
+    function structuredClone(obj) {
+      return JSON.parse(JSON.stringify(obj));
+    }
+
+    function uid(prefix) {
+      return `${prefix}_${Date.now()}_${Math.random().toString(16).slice(2, 8)}`;
+    }
+
+    function fmtCurrency(value) {
+      const num = Number(value || 0);
+      return new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(num);
+    }
+
+    function fmtSigned(value) {
+      const num = Number(value || 0);
+      const klass = num > 0 ? 'good' : num < 0 ? 'bad' : 'muted';
+      return `<span class="${klass}">${fmtCurrency(num)}</span>`;
+    }
+
+    function monthValue(dateStr) {
+      if (!dateStr) return '';
+      return String(dateStr).slice(0, 7);
+    }
+
+    function parseNumber(v) {
+      if (v === null || v === undefined || v === '') return 0;
+      const clean = String(v).replace(/\./g, '').replace(/,/g, '.').replace(/[^0-9.-]/g, '');
+      const num = Number(clean);
+      return Number.isFinite(num) ? num : 0;
+    }
+
+    function normalizeCsvValue(v) {
+      return String(v || '').trim();
+    }
+
+    function signedMovement(m) {
+      const value = Number(m.amount || 0);
+      if (m.type === 'salida') return -Math.abs(value);
+      if (m.type === 'traslado') return 0;
+      return Math.abs(value);
+    }
+
+    function getAllMonths() {
+      const set = new Set();
+      state.accounts.forEach(a => set.add(a.month));
+      state.movements.forEach(m => set.add(monthValue(m.date)));
+      state.liquidations.forEach(l => set.add(l.month));
+      state.provisions.forEach(p => set.add(p.month));
+      const current = new Date();
+      const now = `${current.getFullYear()}-${String(current.getMonth() + 1).padStart(2, '0')}`;
+      set.add(now);
+      return Array.from(set).filter(Boolean).sort();
+    }
+
+    function getSelectedMonth() {
+      const value = document.getElementById('monthFilter').value;
+      return value || getAllMonths().slice(-1)[0];
+    }
+
+    function monthsUpTo(targetMonth) {
+      return getAllMonths().filter(m => m <= targetMonth);
+    }
+
+    function filterStateByMonth(month) {
+      return {
+        accounts: state.accounts.filter(a => a.month === month),
+        movements: state.movements.filter(m => monthValue(m.date) === month),
+        liquidations: state.liquidations.filter(l => l.month === month),
+        provisions: state.provisions.filter(p => p.month === month),
+        cumulativeLiquidations: state.liquidations.filter(l => l.month <= month),
+        cumulativeProvisions: state.provisions.filter(p => p.month <= month),
+        cumulativeMovements: state.movements.filter(m => monthValue(m.date) <= month),
+      };
+    }
+
+    function computeMetrics(month) {
+      const data = filterStateByMonth(month);
+      const accountRows = data.accounts.map(acc => {
+        const netMov = data.movements
+          .filter(m => m.account === acc.name)
+          .reduce((sum, m) => sum + signedMovement(m), 0);
+        const expected = Number(acc.openingBalance || 0) + netMov;
+        const actual = Number(acc.actualBalance || 0);
+        return {
+          ...acc,
+          netMov,
+          expected,
+          actual,
+          diff: actual - expected,
+        };
+      });
+
+      const totalBankExpected = accountRows.reduce((s, a) => s + a.expected, 0);
+      const totalBankReal = accountRows.reduce((s, a) => s + a.actual, 0);
+      const bankMismatch = totalBankReal - totalBankExpected;
+
+      const cumulativeLiquid = data.cumulativeLiquidations;
+      const cumulativeMov = data.cumulativeMovements;
+      const cumulativeProv = data.cumulativeProvisions;
+
+      const depositsPending = cumulativeLiquid.reduce((s, l) => s + Number(l.depositIn || 0) - Number(l.depositOut || 0), 0);
+      const ownerPayoutDue = cumulativeLiquid.reduce((s, l) => s + Number(l.ownerPayout || 0), 0);
+      const ownerPayoutPaid = cumulativeMov
+        .filter(m => m.category === 'GIRO_PROPIETARIO')
+        .reduce((s, m) => s + Math.abs(Number(m.amount || 0)), 0);
+      const ownerPending = ownerPayoutDue - ownerPayoutPaid;
+
+      const ivaAccrued = cumulativeLiquid.reduce((s, l) => s + Number(l.iva || 0), 0);
+      const ivaPaid = cumulativeMov
+        .filter(m => m.category === 'PAGO_IVA_DIAN')
+        .reduce((s, m) => s + Math.abs(Number(m.amount || 0)), 0);
+      const ivaPending = ivaAccrued - ivaPaid;
+
+      const retentionsAccrued = cumulativeLiquid.reduce((s, l) => s + Number(l.retentionTenant || 0) + Number(l.retentionOwner || 0), 0);
+      const retentionsPaid = cumulativeMov
+        .filter(m => m.category === 'TRASLADO_RETENCION')
+        .reduce((s, m) => s + Math.abs(Number(m.amount || 0)), 0);
+      const retentionsPending = retentionsAccrued - retentionsPaid;
+
+      const provisionsPending = cumulativeProv.reduce((s, p) => s + Number(p.amount || 0), 0);
+      const cajaRealStandout = totalBankReal - depositsPending - ownerPending - ivaPending - retentionsPending;
+      const cajaDisponible = cajaRealStandout - provisionsPending;
+
+      const monthMovements = data.movements;
+      const monthLiquidations = data.liquidations;
+      const monthProvisions = data.provisions;
+
+      const totalCanon = monthLiquidations.reduce((s, l) => s + Number(l.canon || 0), 0);
+      const commissionGross = monthLiquidations.reduce((s, l) => s + Number(l.commissionGross || 0), 0);
+      const standoutExpenses = monthLiquidations.reduce((s, l) => s + Number(l.standoutExpenses || 0), 0) + monthMovements.filter(m => m.category === 'GASTO_STANDOUT').reduce((s, m) => s + Math.abs(Number(m.amount || 0)), 0);
+      const topRubros = aggregateBy(monthMovements, m => m.category, m => signedMovement(m));
+      const byApartment = aggregateLiquidationsByApartment(monthLiquidations);
+      const netMargin = commissionGross - monthLiquidations.reduce((s, l) => s + Number(l.iva || 0) + Number(l.standoutExpenses || 0), 0);
+
+      return {
+        month,
+        accountRows,
+        totalBankExpected,
+        totalBankReal,
+        bankMismatch,
+        depositsPending,
+        ownerPending,
+        ivaPending,
+        retentionsPending,
+        provisionsPending,
+        cajaRealStandout,
+        cajaDisponible,
+        totalCanon,
+        commissionGross,
+        standoutExpenses,
+        topRubros,
+        byApartment,
+        netMargin,
+        monthMovements,
+        monthLiquidations,
+        monthProvisions,
+      };
+    }
+
+    function aggregateBy(items, keyFn, valueFn) {
+      const map = new Map();
+      items.forEach(item => {
+        const key = keyFn(item) || 'Sin clasificar';
+        const value = Number(valueFn(item) || 0);
+        map.set(key, (map.get(key) || 0) + value);
+      });
+      return Array.from(map.entries())
+        .map(([key, total]) => ({ key, total }))
+        .sort((a, b) => Math.abs(b.total) - Math.abs(a.total));
+    }
+
+    function aggregateLiquidationsByApartment(items) {
+      const map = new Map();
+      items.forEach(l => {
+        const key = l.apartment || 'Sin apartamento';
+        if (!map.has(key)) {
+          map.set(key, { apartment: key, canon: 0, commissionGross: 0, iva: 0, ownerPayout: 0, standoutExpenses: 0 });
+        }
+        const row = map.get(key);
+        row.canon += Number(l.canon || 0);
+        row.commissionGross += Number(l.commissionGross || 0);
+        row.iva += Number(l.iva || 0);
+        row.ownerPayout += Number(l.ownerPayout || 0);
+        row.standoutExpenses += Number(l.standoutExpenses || 0);
+      });
+      return Array.from(map.values()).map(r => ({ ...r, netMargin: r.commissionGross - r.iva - r.standoutExpenses }));
+    }
+
+    function renderTabs() {
+      const tabs = document.getElementById('tabs');
+      tabs.innerHTML = PAGES.map(p => `
+        <button class="tab ${p.id === activePage ? 'active' : ''}" data-tab="${p.id}">${p.label}</button>
+      `).join('');
+      tabs.querySelectorAll('.tab').forEach(btn => btn.addEventListener('click', () => setPage(btn.dataset.tab)));
+    }
+
+    function setPage(pageId) {
+      activePage = pageId;
+      document.querySelectorAll('.page').forEach(p => p.classList.toggle('active', p.dataset.page === pageId));
+      renderTabs();
+    }
+
+    function renderMonthOptions() {
+      const months = getAllMonths();
+      const monthFilter = document.getElementById('monthFilter');
+      const selected = monthFilter.value || months[months.length - 1];
+      monthFilter.innerHTML = months.map(m => `<option value="${m}">${m}</option>`).join('');
+      monthFilter.value = selected;
+      ['accMonth', 'liqMonth', 'provMonth', 'reportMonth'].forEach(id => {
+        const el = document.getElementById(id);
+        if (!el.value) el.value = selected;
+      });
+    }
+
+    function renderSelectOptions() {
+      const accountNames = Array.from(new Set(state.accounts.map(a => a.name))).sort();
+      const accountOptions = ['<option value="">Seleccione</option>']
+        .concat(accountNames.map(a => `<option value="${escapeHtml(a)}">${escapeHtml(a)}</option>`))
+        .join('');
+      document.getElementById('movAccount').innerHTML = accountOptions;
+
+      document.getElementById('movType').innerHTML = MOVEMENT_TYPES.map(v => `<option value="${v}">${v}</option>`).join('');
+      document.getElementById('movCategory').innerHTML = MOVEMENT_CATEGORIES.map(v => `<option value="${v}">${v}</option>`).join('');
+      document.getElementById('provCategory').innerHTML = PROVISION_CATEGORIES.map(v => `<option value="${v}">${v}</option>`).join('');
+    }
+
+    function renderDashboard() {
+      const metrics = computeMetrics(getSelectedMonth());
+      const cardData = [
+        { label: 'Banco real', value: metrics.totalBankReal, sub: 'Suma de saldos reales cargados', css: 'soft-blue', valueCss: '' },
+        { label: 'Caja real Standout', value: metrics.cajaRealStandout, sub: 'Banco real menos plata de terceros y fiscal', css: metrics.cajaRealStandout >= 0 ? 'soft-good' : 'soft-bad', valueCss: metrics.cajaRealStandout >= 0 ? 'good' : 'bad' },
+        { label: 'Caja disponible', value: metrics.cajaDisponible, sub: 'Caja real menos provisiones pendientes', css: metrics.cajaDisponible >= 0 ? 'soft-good' : 'soft-bad', valueCss: metrics.cajaDisponible >= 0 ? 'good' : 'bad' },
+        { label: 'Descuadre bancario', value: metrics.bankMismatch, sub: 'Saldo real menos saldo esperado', css: Math.abs(metrics.bankMismatch) < 1 ? 'soft-good' : 'soft-bad', valueCss: Math.abs(metrics.bankMismatch) < 1 ? 'good' : 'bad' },
+      ];
+
+      document.getElementById('dashboardCards').innerHTML = cardData.map(c => `
+        <div class="card kpi ${c.css}">
+          <div class="label">${c.label}</div>
+          <div class="value ${c.valueCss}">${fmtCurrency(c.value)}</div>
+          <div class="sub">${c.sub}</div>
+        </div>
+      `).join('');
+
+      const layerRows = [
+        ['Banco real', metrics.totalBankReal],
+        ['(-) Depósitos en custodia pendientes', -metrics.depositsPending],
+        ['(-) Giros a propietarios pendientes', -metrics.ownerPending],
+        ['(-) IVA pendiente por pagar', -metrics.ivaPending],
+        ['(-) Retenciones pendientes por trasladar', -metrics.retentionsPending],
+        ['= Caja real Standout', metrics.cajaRealStandout],
+        ['(-) Provisiones y reservas internas', -metrics.provisionsPending],
+        ['= Caja disponible para operar', metrics.cajaDisponible],
+      ];
+      document.getElementById('layersTable').innerHTML = layerRows.map(([label, value], idx) => `
+        <tr>
+          <td>${label}</td>
+          <td class="right">${idx >= 5 ? '<strong>' : ''}${fmtCurrency(value)}${idx >= 5 ? '</strong>' : ''}</td>
+        </tr>
+      `).join('');
+
+      const statusPill = document.getElementById('statusPill');
+      if (Math.abs(metrics.bankMismatch) < 1) {
+        statusPill.className = 'pill good';
+        statusPill.textContent = 'Descuadre bancario en 0';
+      } else {
+        statusPill.className = 'pill bad';
+        statusPill.textContent = 'Hay descuadre bancario';
+      }
+
+      document.getElementById('dashboardInsight').innerHTML = (() => {
+        if (Math.abs(metrics.bankMismatch) >= 1) {
+          return `La prioridad hoy es corregir un descuadre de <strong>${fmtCurrency(metrics.bankMismatch)}</strong>. Primero revisa cuentas con diferencia y luego los rubros mal clasificados.`;
+        }
+        if (metrics.cajaDisponible < 0) {
+          return `Aunque el banco cuadre, la caja disponible está en <strong>${fmtCurrency(metrics.cajaDisponible)}</strong>. Eso significa que el banco tiene plata, pero no toda es operable.`;
+        }
+        return `La foto del mes está sana: el descuadre bancario es 0 y la caja disponible es <strong>${fmtCurrency(metrics.cajaDisponible)}</strong>.`;
+      })();
+
+      const alerts = [
+        alertRow('Descuadre bancario', metrics.bankMismatch, Math.abs(metrics.bankMismatch) < 1, 'Debe ser 0.'),
+        alertRow('Depósitos en custodia', metrics.depositsPending, metrics.depositsPending >= 0, 'Es pasivo de huéspedes.'),
+        alertRow('IVA pendiente', metrics.ivaPending, metrics.ivaPending >= 0, 'Provisiona el bimestre.'),
+        alertRow('Giros pendientes a propietarios', metrics.ownerPending, metrics.ownerPending >= 0, 'Si sube demasiado, la caja aparente engaña.'),
+        alertRow('Caja disponible', metrics.cajaDisponible, metrics.cajaDisponible >= 0, 'Es la cifra con la que sí puedes operar.'),
+      ];
+      document.getElementById('alertsTable').innerHTML = alerts.join('');
+
+      document.getElementById('accountsDashboardTable').innerHTML = metrics.accountRows.length
+        ? metrics.accountRows.map(r => `
+          <tr>
+            <td>${escapeHtml(r.name)}</td>
+            <td>${fmtCurrency(r.openingBalance)}</td>
+            <td>${fmtCurrency(r.netMov)}</td>
+            <td>${fmtCurrency(r.expected)}</td>
+            <td>${fmtCurrency(r.actual)}</td>
+            <td>${fmtSigned(r.diff)}</td>
+          </tr>
+        `).join('')
+        : '<tr><td colspan="6" class="center muted">No hay cuentas cargadas para este mes.</td></tr>';
+
+      const top = metrics.topRubros.slice(0, 10);
+      document.getElementById('topRubrosTable').innerHTML = top.length
+        ? top.map(r => `<tr><td>${escapeHtml(r.key)}</td><td>${fmtCurrency(r.total)}</td></tr>`).join('')
+        : '<tr><td colspan="2" class="center muted">No hay movimientos para este mes.</td></tr>';
+    }
+
+    function alertRow(label, value, ok, note) {
+      const klass = ok ? 'good' : 'bad';
+      const text = ok ? 'OK' : 'Revisar';
+      return `
+        <tr>
+          <td>${label}<div class="footer-note">${note}</div></td>
+          <td class="right">${fmtCurrency(value)}</td>
+          <td class="right"><span class="pill ${klass}">${text}</span></td>
+        </tr>
+      `;
+    }
+
+    function renderAccounts() {
+      const month = getSelectedMonth();
+      const rows = state.accounts
+        .filter(a => a.month === month)
+        .sort((a, b) => a.name.localeCompare(b.name));
+      document.getElementById('accountsTable').innerHTML = rows.length
+        ? rows.map(a => `
+          <tr>
+            <td>${a.month}</td>
+            <td>${escapeHtml(a.name)}</td>
+            <td>${fmtCurrency(a.openingBalance)}</td>
+            <td>${fmtCurrency(a.actualBalance)}</td>
+            <td><button class="secondary" onclick="removeRecord('accounts','${a.id}')">Eliminar</button></td>
+          </tr>
+        `).join('')
+        : '<tr><td colspan="5" class="center muted">No hay cuentas cargadas para este mes.</td></tr>';
+    }
+
+    function renderMovements() {
+      const month = getSelectedMonth();
+      const rows = state.movements
+        .filter(m => monthValue(m.date) === month)
+        .sort((a, b) => a.date.localeCompare(b.date));
+      document.getElementById('movementsCount').textContent = `${rows.length} movimiento(s) del mes`; 
+      document.getElementById('movementsTable').innerHTML = rows.length
+        ? rows.map(m => `
+          <tr>
+            <td>${m.date}</td>
+            <td>${escapeHtml(m.account)}</td>
+            <td>${escapeHtml(m.type)}</td>
+            <td>${escapeHtml(m.category)}</td>
+            <td>${escapeHtml(m.subcategory || '')}</td>
+            <td>${escapeHtml(m.apartment || '')}</td>
+            <td>${escapeHtml(m.description || '')}</td>
+            <td class="right">${fmtCurrency(signedMovement(m))}</td>
+            <td><button class="secondary" onclick="removeRecord('movements','${m.id}')">Eliminar</button></td>
+          </tr>
+        `).join('')
+        : '<tr><td colspan="9" class="center muted">No hay movimientos cargados para este mes.</td></tr>';
+    }
+
+    function renderLiquidations() {
+      const month = getSelectedMonth();
+      const rows = state.liquidations
+        .filter(l => l.month === month)
+        .sort((a, b) => a.apartment.localeCompare(b.apartment));
+      document.getElementById('liquidationsCount').textContent = `${rows.length} liquidación(es) del mes`; 
+      document.getElementById('liquidationsTable').innerHTML = rows.length
+        ? rows.map(l => `
+          <tr>
+            <td>${l.month}</td>
+            <td>${escapeHtml(l.apartment)}</td>
+            <td>${fmtCurrency(l.canon)}</td>
+            <td>${fmtCurrency(Number(l.depositIn) - Number(l.depositOut))}</td>
+            <td>${fmtCurrency(l.extras)}</td>
+            <td>${fmtCurrency(l.ownerExpenses)}</td>
+            <td>${fmtCurrency(l.standoutExpenses)}</td>
+            <td>${fmtCurrency(l.commissionGross)}</td>
+            <td>${fmtCurrency(l.iva)}</td>
+            <td>${fmtCurrency(l.ownerPayout)}</td>
+            <td>${fmtCurrency(Number(l.retentionTenant) + Number(l.retentionOwner))}</td>
+            <td><button class="secondary" onclick="removeRecord('liquidations','${l.id}')">Eliminar</button></td>
+          </tr>
+        `).join('')
+        : '<tr><td colspan="12" class="center muted">No hay liquidaciones cargadas para este mes.</td></tr>';
+    }
+
+    function renderProvisions() {
+      const month = getSelectedMonth();
+      const rows = state.provisions
+        .filter(p => p.month === month)
+        .sort((a, b) => a.category.localeCompare(b.category));
+      document.getElementById('provisionsCount').textContent = `${rows.length} provisión(es) del mes`; 
+      document.getElementById('provisionsTable').innerHTML = rows.length
+        ? rows.map(p => `
+          <tr>
+            <td>${p.month}</td>
+            <td>${escapeHtml(p.category)}</td>
+            <td>${escapeHtml(p.description || '')}</td>
+            <td>${fmtCurrency(p.amount)}</td>
+            <td><button class="secondary" onclick="removeRecord('provisions','${p.id}')">Eliminar</button></td>
+          </tr>
+        `).join('')
+        : '<tr><td colspan="5" class="center muted">No hay provisiones cargadas para este mes.</td></tr>';
+    }
+
+    function renderReports() {
+      const month = document.getElementById('reportMonth').value || getSelectedMonth();
+      const aptFilter = (document.getElementById('reportApartment').value || '').trim().toLowerCase();
+      const accountFilter = (document.getElementById('reportAccount').value || '').trim().toLowerCase();
+      const metrics = computeMetrics(month);
+
+      const filteredMovements = metrics.monthMovements.filter(m => {
+        const aptOk = !aptFilter || (m.apartment || '').toLowerCase().includes(aptFilter);
+        const accountOk = !accountFilter || (m.account || '').toLowerCase().includes(accountFilter);
+        return aptOk && accountOk;
+      });
+
+      const filteredLiquidations = metrics.monthLiquidations.filter(l => !aptFilter || (l.apartment || '').toLowerCase().includes(aptFilter));
+      const rubroRows = aggregateBy(filteredMovements, m => m.category, m => signedMovement(m));
+      const aptRows = aggregateLiquidationsByApartment(filteredLiquidations);
+
+      document.getElementById('reportInsights').innerHTML = `
+        <tr><td>Banco real</td><td class="right">${fmtCurrency(metrics.totalBankReal)}</td></tr>
+        <tr><td>Banco esperado</td><td class="right">${fmtCurrency(metrics.totalBankExpected)}</td></tr>
+        <tr><td>Descuadre bancario</td><td class="right">${fmtSigned(metrics.bankMismatch)}</td></tr>
+        <tr><td>Depósitos pendientes</td><td class="right">${fmtCurrency(metrics.depositsPending)}</td></tr>
+        <tr><td>IVA pendiente</td><td class="right">${fmtCurrency(metrics.ivaPending)}</td></tr>
+        <tr><td>Giros pendientes</td><td class="right">${fmtCurrency(metrics.ownerPending)}</td></tr>
+        <tr><td>Caja disponible</td><td class="right">${fmtCurrency(metrics.cajaDisponible)}</td></tr>
+      `;
+
+      document.getElementById('reportByCategory').innerHTML = rubroRows.length
+        ? rubroRows.map(r => `<tr><td>${escapeHtml(r.key)}</td><td>${fmtCurrency(r.total)}</td></tr>`).join('')
+        : '<tr><td colspan="2" class="center muted">Sin resultados.</td></tr>';
+
+      document.getElementById('reportByApartment').innerHTML = aptRows.length
+        ? aptRows.map(r => `
+          <tr>
+            <td>${escapeHtml(r.apartment)}</td>
+            <td>${fmtCurrency(r.canon)}</td>
+            <td>${fmtCurrency(r.commissionGross)}</td>
+            <td>${fmtCurrency(r.iva)}</td>
+            <td>${fmtCurrency(r.ownerPayout)}</td>
+            <td>${fmtCurrency(r.netMargin)}</td>
+          </tr>
+        `).join('')
+        : '<tr><td colspan="6" class="center muted">Sin resultados.</td></tr>';
+
+      document.getElementById('reportMovements').innerHTML = filteredMovements.length
+        ? filteredMovements.map(m => `
+          <tr>
+            <td>${m.date}</td>
+            <td>${escapeHtml(m.account)}</td>
+            <td>${escapeHtml(m.category)}</td>
+            <td>${escapeHtml(m.apartment || '')}</td>
+            <td>${escapeHtml(m.description || '')}</td>
+            <td class="right">${fmtCurrency(signedMovement(m))}</td>
+          </tr>
+        `).join('')
+        : '<tr><td colspan="6" class="center muted">Sin movimientos para estos filtros.</td></tr>';
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    function refreshAll() {
+      saveState();
+      renderMonthOptions();
+      renderSelectOptions();
+      renderDashboard();
+      renderAccounts();
+      renderMovements();
+      renderLiquidations();
+      renderProvisions();
+      renderReports();
+    }
+
+    function addAccount() {
+      const month = document.getElementById('accMonth').value;
+      const name = document.getElementById('accName').value.trim();
+      const openingBalance = parseNumber(document.getElementById('accOpening').value);
+      const actualBalance = parseNumber(document.getElementById('accActual').value);
+      if (!month || !name) return alert('Mes y cuenta son obligatorios.');
+
+      const existing = state.accounts.find(a => a.month === month && a.name.toLowerCase() === name.toLowerCase());
+      if (existing) {
+        existing.openingBalance = openingBalance;
+        existing.actualBalance = actualBalance;
+      } else {
+        state.accounts.push({ id: uid('acc'), month, name, openingBalance, actualBalance });
+      }
+      document.getElementById('accName').value = '';
+      document.getElementById('accOpening').value = '';
+      document.getElementById('accActual').value = '';
+      refreshAll();
+    }
+
+    function addMovement() {
+      const date = document.getElementById('movDate').value;
+      const account = document.getElementById('movAccount').value;
+      const type = document.getElementById('movType').value;
+      const category = document.getElementById('movCategory').value;
+      const subcategory = document.getElementById('movSubcategory').value.trim();
+      const apartment = document.getElementById('movApartment').value.trim();
+      const description = document.getElementById('movDescription').value.trim();
+      const amount = parseNumber(document.getElementById('movAmount').value);
+      if (!date || !account || !type || !category || !amount) return alert('Completa fecha, cuenta, tipo, rubro y valor.');
+
+      state.movements.push({ id: uid('mov'), date, account, type, category, subcategory, apartment, description, amount });
+      ['movDate','movSubcategory','movApartment','movDescription','movAmount'].forEach(id => document.getElementById(id).value = '');
+      refreshAll();
+    }
+
+    function addLiquidation() {
+      const rec = {
+        id: uid('liq'),
+        month: document.getElementById('liqMonth').value,
+        apartment: document.getElementById('liqApartment').value.trim(),
+        canon: parseNumber(document.getElementById('liqCanon').value),
+        depositIn: parseNumber(document.getElementById('liqDepositIn').value),
+        depositOut: parseNumber(document.getElementById('liqDepositOut').value),
+        extras: parseNumber(document.getElementById('liqExtras').value),
+        ownerExpenses: parseNumber(document.getElementById('liqOwnerExpenses').value),
+        standoutExpenses: parseNumber(document.getElementById('liqStandoutExpenses').value),
+        commissionGross: parseNumber(document.getElementById('liqCommissionGross').value),
+        iva: parseNumber(document.getElementById('liqIva').value),
+        ownerPayout: parseNumber(document.getElementById('liqOwnerPayout').value),
+        retentionTenant: parseNumber(document.getElementById('liqRetentionTenant').value),
+        retentionOwner: parseNumber(document.getElementById('liqRetentionOwner').value),
+        notes: document.getElementById('liqNotes').value.trim(),
+      };
+      if (!rec.month || !rec.apartment) return alert('Mes y apartamento son obligatorios.');
+      state.liquidations.push(rec);
+      ['liqApartment','liqCanon','liqDepositIn','liqDepositOut','liqExtras','liqOwnerExpenses','liqStandoutExpenses','liqCommissionGross','liqIva','liqOwnerPayout','liqRetentionTenant','liqRetentionOwner','liqNotes'].forEach(id => document.getElementById(id).value = '');
+      refreshAll();
+    }
+
+    function addProvision() {
+      const month = document.getElementById('provMonth').value;
+      const category = document.getElementById('provCategory').value;
+      const amount = parseNumber(document.getElementById('provAmount').value);
+      const description = document.getElementById('provDescription').value.trim();
+      if (!month || !category || !amount) return alert('Mes, rubro y valor son obligatorios.');
+      state.provisions.push({ id: uid('prov'), month, category, amount, description });
+      ['provAmount','provDescription'].forEach(id => document.getElementById(id).value = '');
+      refreshAll();
+    }
+
+    function removeRecord(collection, id) {
+      state[collection] = state[collection].filter(r => r.id !== id);
+      refreshAll();
+    }
+    window.removeRecord = removeRecord;
+
+    function parseCsv(text) {
+      const lines = text.trim().split(/\r?\n/).filter(Boolean);
+      if (!lines.length) return [];
+      const headers = splitCsvLine(lines[0]).map(h => normalizeCsvValue(h).toLowerCase());
+      return lines.slice(1).map(line => {
+        const cols = splitCsvLine(line);
+        const obj = {};
+        headers.forEach((h, i) => obj[h] = normalizeCsvValue(cols[i]));
+        return obj;
+      });
+    }
+
+    function splitCsvLine(line) {
+      const result = [];
+      let current = '';
+      let inQuotes = false;
+      for (let i = 0; i < line.length; i++) {
+        const ch = line[i];
+        if (ch === '"') {
+          inQuotes = !inQuotes;
+        } else if (ch === ',' && !inQuotes) {
+          result.push(current);
+          current = '';
+        } else {
+          current += ch;
+        }
+      }
+      result.push(current);
+      return result.map(v => v.trim());
+    }
+
+    function handleMovCsv(file) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const rows = parseCsv(reader.result);
+        rows.forEach(r => {
+          const amount = parseNumber(r.valor);
+          if (!r.fecha || !r.cuenta || !r.tipo || !r.rubro || !amount) return;
+          state.movements.push({
+            id: uid('mov'),
+            date: r.fecha,
+            account: r.cuenta,
+            type: r.tipo.toLowerCase(),
+            category: r.rubro,
+            subcategory: r.subrubro || '',
+            apartment: r.apartamento || '',
+            description: r.descripcion || '',
+            amount,
+          });
+        });
+        refreshAll();
+      };
+      reader.readAsText(file);
+    }
+
+    function handleLiqCsv(file) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const rows = parseCsv(reader.result);
+        rows.forEach(r => {
+          if (!r.mes || !r.apartamento) return;
+          state.liquidations.push({
+            id: uid('liq'),
+            month: r.mes,
+            apartment: r.apartamento,
+            canon: parseNumber(r.canon),
+            depositIn: parseNumber(r.deposito_recibido),
+            depositOut: parseNumber(r.deposito_devuelto),
+            extras: parseNumber(r.extras_danos),
+            ownerExpenses: parseNumber(r.gastos_propietario),
+            standoutExpenses: parseNumber(r.gastos_standout),
+            commissionGross: parseNumber(r.comision_bruta),
+            iva: parseNumber(r.iva_comision),
+            ownerPayout: parseNumber(r.giro_propietario),
+            retentionTenant: parseNumber(r.retencion_arrendatario),
+            retentionOwner: parseNumber(r.retencion_propietario),
+            notes: r.notas || '',
+          });
+        });
+        refreshAll();
+      };
+      reader.readAsText(file);
+    }
+
+    function downloadText(filename, content, type = 'text/plain;charset=utf-8') {
+      const blob = new Blob([content], { type });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function exportJson() {
+      downloadText(`standout_tesoreria_backup_${new Date().toISOString().slice(0,10)}.json`, JSON.stringify(state, null, 2), 'application/json;charset=utf-8');
+    }
+
+    function importJson(file) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const data = JSON.parse(reader.result);
+          state = {
+            accounts: data.accounts || [],
+            movements: data.movements || [],
+            liquidations: data.liquidations || [],
+            provisions: data.provisions || [],
+          };
+          refreshAll();
+        } catch {
+          alert('El archivo JSON no es válido.');
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    function seedDemo() {
+      const current = getSelectedMonth() || `${new Date().getFullYear()}-${String(new Date().getMonth()+1).padStart(2, '0')}`;
+      state = structuredClone(DEFAULT_STATE);
+      state.accounts = [
+        { id: uid('acc'), month: current, name: 'Bancolombia Operativa 1', openingBalance: 82000000, actualBalance: 96500000 },
+        { id: uid('acc'), month: current, name: 'Bancolombia Fiducuenta 2', openingBalance: 48000000, actualBalance: 53100000 },
+      ];
+      state.movements = [
+        { id: uid('mov'), date: `${current}-02`, account: 'Bancolombia Operativa 1', type: 'entrada', category: 'CANON_RECIBIDO', subcategory: '', apartment: 'Apto 301', description: 'Canon abril', amount: 7800000 },
+        { id: uid('mov'), date: `${current}-03`, account: 'Bancolombia Operativa 1', type: 'entrada', category: 'DEPOSITO_RECIBIDO', subcategory: '', apartment: 'Apto 301', description: 'Depósito seguridad', amount: 4000000 },
+        { id: uid('mov'), date: `${current}-04`, account: 'Bancolombia Operativa 1', type: 'salida', category: 'GIRO_PROPIETARIO', subcategory: '', apartment: 'Apto 301', description: 'Liquidación propietario', amount: 5900000 },
+        { id: uid('mov'), date: `${current}-05`, account: 'Bancolombia Operativa 1', type: 'salida', category: 'GASTO_STANDOUT', subcategory: 'lavandería', apartment: 'Apto 301', description: 'Lavandería ingreso huésped', amount: 180000 },
+        { id: uid('mov'), date: `${current}-06`, account: 'Bancolombia Operativa 1', type: 'salida', category: 'GASTO_BANCARIO', subcategory: 'transferencia', apartment: '', description: 'Comisión bancaria', amount: 24000 },
+        { id: uid('mov'), date: `${current}-10`, account: 'Bancolombia Fiducuenta 2', type: 'entrada', category: 'CANON_RECIBIDO', subcategory: '', apartment: 'Apto 702', description: 'Canon abril', amount: 11200000 },
+        { id: uid('mov'), date: `${current}-15`, account: 'Bancolombia Operativa 1', type: 'salida', category: 'PAGO_IVA_DIAN', subcategory: '', apartment: '', description: 'IVA bimestre', amount: 1200000 },
+      ];
+      state.liquidations = [
+        { id: uid('liq'), month: current, apartment: 'Apto 301', canon: 7800000, depositIn: 4000000, depositOut: 0, extras: 0, ownerExpenses: 350000, standoutExpenses: 180000, commissionGross: 1170000, iva: 222300, ownerPayout: 5900000, retentionTenant: 0, retentionOwner: 0, notes: '' },
+        { id: uid('liq'), month: current, apartment: 'Apto 702', canon: 11200000, depositIn: 0, depositOut: 0, extras: 180000, ownerExpenses: 430000, standoutExpenses: 0, commissionGross: 1680000, iva: 319200, ownerPayout: 8910000, retentionTenant: 150000, retentionOwner: 0, notes: '' },
+      ];
+      state.provisions = [
+        { id: uid('prov'), month: current, category: 'ICA', amount: 680000, description: 'Reserva mensual ICA' },
+        { id: uid('prov'), month: current, category: 'COMPRA_VOLUMEN_PENDIENTE', amount: 550000, description: 'Café y amenities' },
+      ];
+      refreshAll();
+      setPage('dashboard');
+    }
+
+    function clearAll() {
+      if (!confirm('Esto borrará toda la base local del navegador. ¿Continuar?')) return;
+      state = structuredClone(DEFAULT_STATE);
+      refreshAll();
+    }
+
+    function downloadTemplates() {
+      const movTemplate = 'fecha,cuenta,tipo,rubro,subrubro,apartamento,descripcion,valor\n2026-04-01,Bancolombia Operativa 1,entrada,CANON_RECIBIDO,,Apto 301,Canon abril,7800000\n';
+      const liqTemplate = 'mes,apartamento,canon,deposito_recibido,deposito_devuelto,extras_danos,gastos_propietario,gastos_standout,comision_bruta,iva_comision,giro_propietario,retencion_arrendatario,retencion_propietario,notas\n2026-04,Apto 301,7800000,4000000,0,0,350000,180000,1170000,222300,5900000,0,0,\n';
+      return { movTemplate, liqTemplate };
+    }
+
+    function initEvents() {
+      document.getElementById('monthFilter').addEventListener('change', refreshAll);
+      document.getElementById('saveAccountBtn').addEventListener('click', addAccount);
+      document.getElementById('saveMovementBtn').addEventListener('click', addMovement);
+      document.getElementById('saveLiquidationBtn').addEventListener('click', addLiquidation);
+      document.getElementById('saveProvisionBtn').addEventListener('click', addProvision);
+      document.getElementById('runReportsBtn').addEventListener('click', renderReports);
+      document.getElementById('seedDemoBtn').addEventListener('click', seedDemo);
+      document.getElementById('clearAllBtn').addEventListener('click', clearAll);
+      document.getElementById('exportJsonBtn').addEventListener('click', exportJson);
+      document.getElementById('importJsonBtn').addEventListener('click', () => document.getElementById('importJsonInput').click());
+      document.getElementById('importJsonInput').addEventListener('change', (e) => e.target.files[0] && importJson(e.target.files[0]));
+      document.getElementById('movCsvInput').addEventListener('change', (e) => e.target.files[0] && handleMovCsv(e.target.files[0]));
+      document.getElementById('liqCsvInput').addEventListener('change', (e) => e.target.files[0] && handleLiqCsv(e.target.files[0]));
+      document.getElementById('downloadMovTemplateBtn').addEventListener('click', () => downloadText('plantilla_movimientos.csv', downloadTemplates().movTemplate, 'text/csv;charset=utf-8'));
+      document.getElementById('downloadLiqTemplateBtn').addEventListener('click', () => downloadText('plantilla_liquidaciones.csv', downloadTemplates().liqTemplate, 'text/csv;charset=utf-8'));
+    }
+
+    function init() {
+      renderTabs();
+      renderMonthOptions();
+      renderSelectOptions();
+      initEvents();
+      refreshAll();
+    }
+
+    init();
+  </script>
+</body>
+</html>
